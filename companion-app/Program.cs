@@ -12,6 +12,7 @@ var memoryOptions = builder.Configuration.GetSection("Memory").Get<MemoryOptions
 builder.WebHost.UseUrls(companionOptions.BindUrl);
 
 var app = builder.Build();
+var calibrationFilePath = Path.Combine(app.Environment.ContentRootPath, "Data", "map-calibration.json");
 
 app.UseDefaultFiles();
 app.UseStaticFiles();
@@ -159,6 +160,41 @@ app.MapPost("/position", async (ManualPositionUpdate update) =>
     return Results.Json(state);
 });
 
+app.MapGet("/calibration/map", async () =>
+{
+    if (!File.Exists(calibrationFilePath))
+    {
+        return Results.Json(CalibrationDocument.Empty(), JsonOptions.Default);
+    }
+
+    try
+    {
+        await using var stream = File.OpenRead(calibrationFilePath);
+        var document = await JsonSerializer.DeserializeAsync<CalibrationDocument>(stream, JsonOptions.Default);
+        return Results.Json(CalibrationStorage.Clean(document), JsonOptions.Default);
+    }
+    catch (Exception ex)
+    {
+        return Results.Json(new { error = ex.GetType().Name, message = ex.Message }, statusCode: StatusCodes.Status500InternalServerError);
+    }
+});
+
+app.MapPost("/calibration/map", async (CalibrationDocument document) =>
+{
+    var cleaned = CalibrationStorage.Clean(document) with
+    {
+        Version = 1,
+        UpdatedAtUnixMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+    };
+
+    Directory.CreateDirectory(Path.GetDirectoryName(calibrationFilePath)!);
+    await using var stream = File.Create(calibrationFilePath);
+    await JsonSerializer.SerializeAsync(stream, cleaned, JsonOptions.Indented);
+    await stream.WriteAsync(Encoding.UTF8.GetBytes(Environment.NewLine));
+
+    return Results.Json(cleaned, JsonOptions.Default);
+});
+
 app.Map("/ws", async context =>
 {
     if (!context.WebSockets.IsWebSocketRequest)
@@ -193,10 +229,57 @@ public sealed class CompanionOptions
 
 public sealed record ManualPositionUpdate(double X, double Y, double Z, double Yaw);
 
+public sealed record CalibrationDocument(
+    int Version,
+    IReadOnlyList<CalibrationPoint>? Points,
+    long UpdatedAtUnixMs
+)
+{
+    public static CalibrationDocument Empty() => new(1, Array.Empty<CalibrationPoint>(), 0);
+}
+
+public sealed record CalibrationPoint(
+    string? Id,
+    double GameX,
+    double GameZ,
+    double MapX,
+    double MapY
+);
+
+public static class CalibrationStorage
+{
+    public static CalibrationDocument Clean(CalibrationDocument? document)
+    {
+        if (document?.Points is null)
+        {
+            return CalibrationDocument.Empty();
+        }
+
+        var points = document.Points
+            .Where(point =>
+                double.IsFinite(point.GameX) &&
+                double.IsFinite(point.GameZ) &&
+                double.IsFinite(point.MapX) &&
+                double.IsFinite(point.MapY))
+            .Select(point => point with
+            {
+                Id = string.IsNullOrWhiteSpace(point.Id) ? Guid.NewGuid().ToString("N") : point.Id
+            })
+            .ToArray();
+
+        return new CalibrationDocument(1, points, document.UpdatedAtUnixMs);
+    }
+}
+
 public static class JsonOptions
 {
     public static readonly JsonSerializerOptions Default = new(JsonSerializerDefaults.Web)
     {
         WriteIndented = false
+    };
+
+    public static readonly JsonSerializerOptions Indented = new(JsonSerializerDefaults.Web)
+    {
+        WriteIndented = true
     };
 }

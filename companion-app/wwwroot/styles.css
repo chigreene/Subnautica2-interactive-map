@@ -170,6 +170,12 @@ button:hover {
   gap: 8px;
 }
 
+.calibration-storage {
+  color: #9eb2bc;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
 .calibration-table-wrap {
   max-height: 240px;
   overflow: auto;

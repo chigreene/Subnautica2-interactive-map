@@ -3,6 +3,7 @@ const ctx = canvas.getContext('2d');
 const mapImage = new Image();
 mapImage.src = 'maps/sn2-sector-map.png';
 const CALIBRATION_STORAGE_KEY = 'sn2-affine-calibration-v1';
+const CALIBRATION_ENDPOINT = 'calibration/map';
 const TARGET_CALIBRATION_POINTS = 10;
 
 const fields = {
@@ -26,6 +27,9 @@ const fields = {
   calPointList: document.getElementById('calPointList'),
   undoCalPoint: document.getElementById('undoCalPoint'),
   clearCalPoints: document.getElementById('clearCalPoints'),
+  loadCalJson: document.getElementById('loadCalJson'),
+  saveCalJson: document.getElementById('saveCalJson'),
+  calStorageStatus: document.getElementById('calStorageStatus'),
 };
 
 let latest = { x: 0, y: 0, z: 0, yaw: 0, source: 'initial' };
@@ -75,25 +79,29 @@ function mapState(state) {
   };
 }
 
+function normalizeCalibrationPoints(points) {
+  if (!Array.isArray(points)) return [];
+
+  return points
+    .map((point) => ({
+      id: String(point.id || `${Date.now()}-${Math.random()}`),
+      gameX: Number(point.gameX),
+      gameZ: Number(point.gameZ),
+      mapX: Number(point.mapX),
+      mapY: Number(point.mapY),
+    }))
+    .filter((point) => (
+      Number.isFinite(point.gameX) &&
+      Number.isFinite(point.gameZ) &&
+      Number.isFinite(point.mapX) &&
+      Number.isFinite(point.mapY)
+    ));
+}
+
 function loadCalibrationPoints() {
   try {
     const stored = JSON.parse(localStorage.getItem(CALIBRATION_STORAGE_KEY) || '[]');
-    if (!Array.isArray(stored)) return [];
-
-    return stored
-      .map((point) => ({
-        id: String(point.id || `${Date.now()}-${Math.random()}`),
-        gameX: Number(point.gameX),
-        gameZ: Number(point.gameZ),
-        mapX: Number(point.mapX),
-        mapY: Number(point.mapY),
-      }))
-      .filter((point) => (
-        Number.isFinite(point.gameX) &&
-        Number.isFinite(point.gameZ) &&
-        Number.isFinite(point.mapX) &&
-        Number.isFinite(point.mapY)
-      ));
+    return normalizeCalibrationPoints(stored);
   } catch {
     return [];
   }
@@ -101,6 +109,77 @@ function loadCalibrationPoints() {
 
 function saveCalibrationPoints() {
   localStorage.setItem(CALIBRATION_STORAGE_KEY, JSON.stringify(calibrationPoints));
+}
+
+function setCalibrationStorageStatus(message) {
+  fields.calStorageStatus.textContent = message;
+}
+
+function calibrationDocument() {
+  return {
+    version: 1,
+    points: calibrationPoints,
+    updatedAtUnixMs: Date.now(),
+  };
+}
+
+function setCalibrationPoints(points, statusMessage) {
+  calibrationPoints = normalizeCalibrationPoints(points);
+  saveCalibrationPoints();
+  updateCalibrationUi();
+  if (statusMessage) {
+    setCalibrationStorageStatus(statusMessage);
+  }
+}
+
+async function loadCalibrationFromRepo(force = false) {
+  try {
+    const response = await fetch(CALIBRATION_ENDPOINT, { cache: 'no-store' });
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const document = await response.json();
+    const points = normalizeCalibrationPoints(document.points);
+
+    if (points.length === 0) {
+      if (!force && calibrationPoints.length > 0) {
+        await saveCalibrationToRepo();
+        return;
+      }
+
+      setCalibrationStorageStatus('Repo JSON has no calibration points');
+      return;
+    }
+
+    if (force || calibrationPoints.length === 0) {
+      setCalibrationPoints(points, `Loaded ${points.length} points from repo JSON`);
+    } else {
+      setCalibrationStorageStatus(`Repo JSON has ${points.length} points; browser has ${calibrationPoints.length}`);
+    }
+  } catch (error) {
+    setCalibrationStorageStatus(`Could not load repo JSON: ${error.message}`);
+  }
+}
+
+async function saveCalibrationToRepo() {
+  try {
+    const response = await fetch(CALIBRATION_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(calibrationDocument()),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const document = await response.json();
+    const points = normalizeCalibrationPoints(document.points);
+    setCalibrationPoints(points, `Saved ${points.length} points to repo JSON`);
+  } catch (error) {
+    setCalibrationStorageStatus(`Could not save repo JSON: ${error.message}`);
+  }
 }
 
 function solve3x3(matrix, vector) {
@@ -513,6 +592,7 @@ function addCalibrationPoint(point) {
   });
   saveCalibrationPoints();
   updateCalibrationUi();
+  setCalibrationStorageStatus('Browser calibration changed; save JSON to persist in repo');
 }
 
 function mapPointFromEvent(event) {
@@ -545,12 +625,22 @@ fields.undoCalPoint.addEventListener('click', () => {
   calibrationPoints.pop();
   saveCalibrationPoints();
   updateCalibrationUi();
+  setCalibrationStorageStatus('Browser calibration changed; save JSON to persist in repo');
 });
 
 fields.clearCalPoints.addEventListener('click', () => {
   calibrationPoints = [];
   saveCalibrationPoints();
   updateCalibrationUi();
+  setCalibrationStorageStatus('Browser calibration cleared; save JSON to clear repo file');
+});
+
+fields.loadCalJson.addEventListener('click', () => {
+  loadCalibrationFromRepo(true);
+});
+
+fields.saveCalJson.addEventListener('click', () => {
+  saveCalibrationToRepo();
 });
 
 function connect() {
@@ -578,5 +668,6 @@ function connect() {
 }
 
 updateCalibrationUi();
+loadCalibrationFromRepo(false);
 connect();
 render();
