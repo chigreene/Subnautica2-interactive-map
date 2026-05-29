@@ -123,6 +123,86 @@ input, select {
   padding: 10px;
 }
 
+button {
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.08);
+  color: #edf7fb;
+  padding: 9px 10px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: rgba(255, 255, 255, 0.13);
+}
+
+.calibration {
+  display: grid;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.check-row {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+}
+
+.check-row input {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+}
+
+.calibration-summary {
+  display: grid;
+  gap: 4px;
+  color: #b8c8ce;
+  font-size: 13px;
+}
+
+.calibration-summary strong {
+  color: #edf7fb;
+}
+
+.calibration-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.calibration-table-wrap {
+  max-height: 240px;
+  overflow: auto;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+}
+
+.calibration-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.calibration-table th,
+.calibration-table td {
+  padding: 7px 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.calibration-table th:first-child,
+.calibration-table td:first-child {
+  text-align: left;
+}
+
+.calibration-table th {
+  position: sticky;
+  top: 0;
+  background: #111b22;
+  color: #9eb2bc;
+}
+
 @media (max-width: 1000px) {
   .shell {
     grid-template-columns: 1fr;

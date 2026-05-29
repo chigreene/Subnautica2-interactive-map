@@ -50,6 +50,31 @@
           <option value="-x">-X</option>
         </select>
       </label>
+      <div class="calibration">
+        <label class="check-row"><input id="calibrationMode" type="checkbox" /> Calibration mode</label>
+        <div class="calibration-summary">
+          <strong id="calPointCount">0/10 points</strong>
+          <span id="calRms">Affine inactive</span>
+        </div>
+        <div class="calibration-actions">
+          <button id="undoCalPoint" type="button">Undo</button>
+          <button id="clearCalPoints" type="button">Clear</button>
+        </div>
+        <div class="calibration-table-wrap">
+          <table class="calibration-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>X</th>
+                <th>Z</th>
+                <th>px</th>
+                <th>err</th>
+              </tr>
+            </thead>
+            <tbody id="calPointList"></tbody>
+          </table>
+        </div>
+      </div>
     </section>
   </main>
   <script src="app.js"></script>
