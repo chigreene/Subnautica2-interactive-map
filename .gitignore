@@ -1,0 +1,18 @@
+# .NET build output
+bin/
+obj/
+
+# Local IDE/editor files
+.vs/
+.vscode/
+*.user
+*.suo
+
+# Runtime logs and local process output
+*.log
+sn2-companion.out.log
+sn2-companion.err.log
+
+# OS metadata
+Thumbs.db
+.DS_Store

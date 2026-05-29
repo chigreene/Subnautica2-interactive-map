@@ -1,0 +1,135 @@
+:root {
+  color-scheme: dark;
+  font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+  background: #091015;
+  color: #edf7fb;
+}
+
+body {
+  margin: 0;
+}
+
+.shell {
+  display: grid;
+  grid-template-columns: 320px minmax(500px, 1fr) 280px;
+  min-height: 100vh;
+  gap: 16px;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.panel {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 18px;
+  box-shadow: 0 12px 50px rgba(0, 0, 0, 0.25);
+}
+
+h1, h2 {
+  margin-top: 0;
+}
+
+.muted {
+  color: #a8bac2;
+}
+
+.small {
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+code {
+  background: rgba(255, 255, 255, 0.08);
+  padding: 2px 4px;
+  border-radius: 5px;
+}
+
+.status-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.status-grid div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.status-grid span {
+  color: #9eb2bc;
+}
+
+.feed-warning {
+  margin: 14px 0 0;
+  padding: 10px;
+  border: 1px solid rgba(255, 210, 96, 0.35);
+  border-radius: 8px;
+  background: rgba(122, 86, 0, 0.18);
+  color: #ffe29a;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.map-wrap {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  align-self: center;
+  background: #061015;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  aspect-ratio: 1956 / 972;
+  max-height: calc(100vh - 32px);
+}
+
+canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.map-readout {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  padding: 6px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 6px;
+  background: rgba(4, 10, 14, 0.78);
+  color: #eaf9ff;
+  font: 12px/1.2 system-ui, -apple-system, Segoe UI, sans-serif;
+  pointer-events: none;
+}
+
+.controls {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+
+.controls label {
+  display: grid;
+  gap: 6px;
+  color: #b8c8ce;
+}
+
+input, select {
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(0, 0, 0, 0.25);
+  color: #edf7fb;
+  padding: 10px;
+}
+
+@media (max-width: 1000px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .map-wrap {
+    width: 100%;
+    max-height: none;
+  }
+}
