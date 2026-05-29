@@ -99,25 +99,20 @@ function drawGrid() {
     ctx.stroke();
   }
 
-  ctx.strokeStyle = 'rgba(105, 255, 214, 0.55)';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(originX, 0);
-  ctx.lineTo(originX, canvas.height);
-  ctx.moveTo(0, originY);
-  ctx.lineTo(canvas.width, originY);
-  ctx.stroke();
-
-  ctx.fillStyle = 'rgba(5, 12, 16, 0.78)';
-  ctx.strokeStyle = 'rgba(105, 255, 214, 0.95)';
+  ctx.strokeStyle = 'rgba(105, 255, 214, 0.75)';
   ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.arc(originX, originY, 9, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.moveTo(originX - 18, originY);
+  ctx.lineTo(originX + 18, originY);
+  ctx.moveTo(originX, originY - 18);
+  ctx.lineTo(originX, originY + 18);
   ctx.stroke();
 
+  ctx.fillStyle = 'rgba(5, 12, 16, 0.78)';
+  ctx.fillRect(originX + 12, originY - 31, 66, 22);
   ctx.fillStyle = '#d9fff7';
-  ctx.font = '700 16px system-ui';
+  ctx.font = '700 14px system-ui';
   ctx.fillText('0, 0, 0', originX + 14, originY - 14);
   ctx.font = '12px system-ui';
   ctx.fillText(`${stepMeters}m grid`, originX + 14, originY + 20);
@@ -128,6 +123,35 @@ function drawPlayer(state) {
   if (!Number.isFinite(p.x) || !Number.isFinite(p.y)) return;
 
   const yawRadians = (state.yaw - 90) * Math.PI / 180;
+  const x = Number(state.x ?? 0);
+  const y = Number(state.y ?? 0);
+  const z = Number(state.z ?? 0);
+
+  ctx.save();
+  ctx.translate(p.x, p.y);
+
+  ctx.strokeStyle = 'rgba(255, 224, 112, 0.95)';
+  ctx.fillStyle = 'rgba(4, 10, 14, 0.78)';
+  ctx.lineWidth = 3;
+
+  ctx.beginPath();
+  ctx.arc(0, 0, 16, 0, Math.PI * 2);
+  ctx.moveTo(-28, 0);
+  ctx.lineTo(28, 0);
+  ctx.moveTo(0, -28);
+  ctx.lineTo(0, 28);
+  ctx.stroke();
+
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+  ctx.beginPath();
+  ctx.moveTo(-10, 0);
+  ctx.lineTo(10, 0);
+  ctx.moveTo(0, -10);
+  ctx.lineTo(0, 10);
+  ctx.stroke();
+
+  ctx.restore();
 
   ctx.save();
   ctx.translate(p.x, p.y);
@@ -150,7 +174,8 @@ function drawPlayer(state) {
 
   ctx.fillStyle = 'rgba(255,255,255,0.75)';
   ctx.font = '14px system-ui';
-  ctx.fillText(`depth ${Number(state.y ?? 0).toFixed(1)}m`, p.x + 20, p.y - 16);
+  ctx.fillText(`X ${x.toFixed(1)} / Z ${z.toFixed(1)}`, p.x + 34, p.y - 18);
+  ctx.fillText(`depth ${y.toFixed(1)}m`, p.x + 34, p.y + 1);
 }
 
 function drawCursor() {
