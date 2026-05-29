@@ -11,6 +11,7 @@ const fields = {
   z: document.getElementById('z'),
   yaw: document.getElementById('yaw'),
   scale: document.getElementById('scale'),
+  coordDivisor: document.getElementById('coordDivisor'),
   originX: document.getElementById('originX'),
   originY: document.getElementById('originY'),
   axisX: document.getElementById('axisX'),
@@ -45,24 +46,40 @@ function mapScale() {
   return Number.isFinite(scale) && scale > 0 ? scale : 1;
 }
 
+function coordDivisor() {
+  const divisor = Number(fields.coordDivisor?.value);
+  return Number.isFinite(divisor) && divisor > 0 ? divisor : 1;
+}
+
+function mapState(state) {
+  const divisor = coordDivisor();
+  return {
+    ...state,
+    x: Number(state.x ?? 0) / divisor,
+    z: Number(state.z ?? 0) / divisor,
+  };
+}
+
 function worldToMap(state) {
   const scale = mapScale();
+  const mapped = mapState(state);
   const originX = Number(fields.originX.value || canvas.width / 2);
   const originY = Number(fields.originY.value || canvas.height / 2);
   return {
-    x: originX + axisValue(fields.axisX.value, state) * scale,
-    y: originY + axisValue(fields.axisY.value, state) * scale,
+    x: originX + axisValue(fields.axisX.value, mapped) * scale,
+    y: originY + axisValue(fields.axisY.value, mapped) * scale,
   };
 }
 
 function mapToWorld(point) {
   const scale = mapScale();
+  const divisor = coordDivisor();
   const originX = Number(fields.originX.value || canvas.width / 2);
   const originY = Number(fields.originY.value || canvas.height / 2);
   const world = { x: 0, y: Number(latest.y ?? 0), z: 0 };
 
-  world[axisName(fields.axisX.value)] = ((point.x - originX) / scale) * axisSign(fields.axisX.value);
-  world[axisName(fields.axisY.value)] = ((point.y - originY) / scale) * axisSign(fields.axisY.value);
+  world[axisName(fields.axisX.value)] = ((point.x - originX) / scale) * axisSign(fields.axisX.value) * divisor;
+  world[axisName(fields.axisY.value)] = ((point.y - originY) / scale) * axisSign(fields.axisY.value) * divisor;
 
   return world;
 }
@@ -207,7 +224,8 @@ function updateText(state) {
   fields.yaw.textContent = Number(state.yaw ?? 0).toFixed(1);
 
   const p = worldToMap(state);
-  const tooLarge = Math.abs(Number(state.x ?? 0)) > 10000 || Math.abs(Number(state.z ?? 0)) > 10000;
+  const mapped = mapState(state);
+  const tooLarge = Math.abs(mapped.x) > 10000 || Math.abs(mapped.z) > 10000;
   const offMap = p.x < -100 || p.x > canvas.width + 100 || p.y < -100 || p.y > canvas.height + 100;
   const badSource = String(state.source ?? '').includes('error') || String(state.source ?? '').includes('not-found');
 

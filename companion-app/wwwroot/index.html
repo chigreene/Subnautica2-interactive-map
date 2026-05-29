@@ -29,8 +29,9 @@
 
     <section class="panel controls">
       <h2>Map Calibration</h2>
-      <p class="muted small">Initial calibration: Lifepod/start Shallows at 0,0,0; X east/right; Z north/up; 0.85 image pixels per meter.</p>
+      <p class="muted small">Initial calibration: raw memory X/Z are divided by 1000 for map placement; X east/right; Z north/up; 0.85 image pixels per map meter.</p>
       <label>Scale <input id="scale" type="number" step="0.01" value="0.85" /></label>
+      <label>Raw units per map meter <input id="coordDivisor" type="number" step="1" value="1000" /></label>
       <label>Origin X <input id="originX" type="number" step="1" value="306" /></label>
       <label>Origin Y <input id="originY" type="number" step="1" value="556" /></label>
       <label>Map horizontal axis
